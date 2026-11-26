@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configuration de ton PC</title>
+<title>Configuration PC - Pack Lycéen Normandie</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100vh; padding: 20px; }
@@ -62,7 +62,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100
     <label class="item checked">
       <input type="checkbox" name="balabolka" checked>
       <span class="box"></span>
-      <div><div class="label">Balabolka</div><div class="sub">Lecture + export audio MP3</div></div>
+      <div><div class="label">Balabolka</div><div class="sub">Lecteur d'écran + export audio MP3</div></div>
     </label>
 
     <div class="section">Dictée</div>
@@ -83,7 +83,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100
     <label class="item">
       <input type="checkbox" name="pdfx">
       <span class="box"></span>
-      <div><div class="label">PDF-XChange Editor</div><div class="sub">Modification/Lecture de PDF</div></div>
+      <div><div class="label">PDF-XChange Editor</div><div class="sub">Lecture et annotation de PDF</div></div>
     </label>
     <label class="item">
       <input type="checkbox" name="onenote">
@@ -93,7 +93,7 @@ body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100
     <label class="item">
       <input type="checkbox" name="polices">
       <span class="box"></span>
-      <div><div class="label">Polices de caractères</div><div class="sub">Luciole, OpenDyslexic, Andika…</div></div>
+      <div><div class="label">Polices dyslexie</div><div class="sub">Luciole, OpenDyslexic, Andika…</div></div>
     </label>
   </div>
   <div class="footer">
@@ -122,12 +122,13 @@ function downloadPack() {
   a1.download = 'config.json';
   a1.click();
 
-  // Telecharge l'installeur depuis GitHub
-  const a2 = document.createElement('a');
-  a2.href = 'https://github.com/asvt/CleBitlocker_et_CompteAdmin/releases/download/Config/Install_PC.exe';
-  a2.click();
-
-  document.getElementById('instructions').style.display = 'block';
+  // Telecharge TOUJOURS la derniere version de l'installeur (URL /latest/)
+  setTimeout(() => {
+    const a2 = document.createElement('a');
+    a2.href = 'https://github.com/asvt/CleBitlocker_et_CompteAdmin/releases/latest/download/Install_PC.exe';
+    a2.click();
+    document.getElementById('instructions').style.display = 'block';
+  }, 600);
 }
 </script>
 </body>
