@@ -1,6 +1,6 @@
 # ============================================================
 # INSTALL PC - Executable unique
-# Version 1.0-beta.1 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
+# Version 1.0-beta.2 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
 #              log AppendAllTex, raccourci fixe, Balabolka portable
 # ============================================================
 
@@ -477,33 +477,19 @@ $Window.Add_ContentRendered({
         Inc-Progress
     }
 
-    # --- Raccourci CompteRegion (cible forcee) ---
+    # --- Raccourci CompteRegion (cmd et non lnk) ---
    Add-Step "Raccourci CompteRegion"
     try {
         Get-ChildItem $Desktop -Filter "Mes fichiers*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem $Desktop -Filter "Mes fichiers*.cmd"  -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
         if ($targetUser) {
-            # Cible en DUR = C:\Users\<nom>, identique au nom affiche
             $userFolder = "C:\Users\$targetUser"
             if ($userFolder -match "\\Admin$") { throw "cible admin refusee" }
+            if (-not (Test-Path $userFolder)) { New-Item -ItemType Directory -Path $userFolder -Force | Out-Null }
 
-            # Si le dossier n'existe pas encore (profil non materialise), on le cree
-            if (-not (Test-Path $userFolder)) {
-                New-Item -ItemType Directory -Path $userFolder -Force | Out-Null
-                Log-File "Dossier cree : $userFolder"
-            }
-
-            $lnkPath = Join-Path $Desktop ("Mes fichiers - $targetUser.lnk")
-            $shell = New-Object -ComObject WScript.Shell
-            $lnk = $shell.CreateShortcut($lnkPath)
-            $lnk.TargetPath = $userFolder
-            $lnk.Arguments = ""
-            $lnk.WorkingDirectory = $userFolder
-            $lnk.Description = "Dossier personnel $targetUser"
-            $lnk.IconLocation = "shell32.dll,4"
-            $lnk.Save()
-            $lnk = $null
-            [GC]::Collect()
-            Log-File "Raccourci ecrit -> $userFolder"
+            $cmdPath = Join-Path $Desktop ("Mes fichiers - $targetUser.cmd")
+            "@echo off`r`nstart `"`" `"$userFolder`"" | Out-File $cmdPath -Encoding ASCII -Force
+            Log-File "Raccourci .cmd ecrit -> $userFolder"
             Done-Step "Raccourci CompteRegion ($targetUser)"
         } else { Skip-Step "Raccourci CompteRegion" }
     } catch { Fail-Step "Raccourci CompteRegion : $($_.Exception.Message)" }
