@@ -1,4 +1,4 @@
-Configurer un PC lycéen en obtenant :
+Configurer un PC lycéen via https://asvt.github.io/CleBitlocker_et_CompteAdmin/ en obtenant :
 - la clé Bitlocker
 - un compte Admin local
 - un raccourci vers le dossier perso créé via intune
