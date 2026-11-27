@@ -1,7 +1,7 @@
 # ============================================================
 # INSTALL PC - Executable unique
-# Version alpha2 - CleBitlocker + CompteAdmin integres (PNL OU ordi), Balabolka portable,
-#              log AppendAllText, compte capture AVANT install, raccourci sans parenthèse
+# Version 1.0-beta.1 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
+#              log AppendAllTex, raccourci fixe, Balabolka portable
 # ============================================================
 
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -477,21 +477,21 @@ $Window.Add_ContentRendered({
         Inc-Progress
     }
 
-    # --- Raccourci CompteRegion (cible forcee, garde-fou Admin, sans parenthèse dans le nom) ---
+    # --- Raccourci CompteRegion (cible forcee) ---
    Add-Step "Raccourci CompteRegion"
     try {
         Get-ChildItem $Desktop -Filter "Mes fichiers*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
         if ($targetUser) {
+            # Cible en DUR = C:\Users\<nom>, identique au nom affiche
             $userFolder = "C:\Users\$targetUser"
-            if (-not (Test-Path $userFolder)) {
-                $profiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" -ErrorAction SilentlyContinue
-                foreach ($p in $profiles) {
-                    $pp = (Get-ItemProperty -Path $p.PSPath -ErrorAction SilentlyContinue).ProfileImagePath
-                    if ($pp -and ($pp -imatch "\\$targetUser$")) { $userFolder = $pp; break }
-                }
-            }
             if ($userFolder -match "\\Admin$") { throw "cible admin refusee" }
-            if (-not (Test-Path $userFolder)) { throw "dossier introuvable" }
+
+            # Si le dossier n'existe pas encore (profil non materialise), on le cree
+            if (-not (Test-Path $userFolder)) {
+                New-Item -ItemType Directory -Path $userFolder -Force | Out-Null
+                Log-File "Dossier cree : $userFolder"
+            }
+
             $lnkPath = Join-Path $Desktop ("Mes fichiers - $targetUser.lnk")
             $shell = New-Object -ComObject WScript.Shell
             $lnk = $shell.CreateShortcut($lnkPath)
