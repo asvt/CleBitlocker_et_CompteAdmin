@@ -3,34 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configuration de ton PC</title>
+<title>Configuration PC - Pack Lycéen Normandie</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100vh; padding: 20px; }
-.card { max-width: 540px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-.header { background: linear-gradient(135deg, #003C7D, #0066B3); padding: 28px 24px; color: #fff; }
+body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100vh; padding: 20px; display: flex; align-items: center; justify-content: center; }
+.card { width: 100%; max-width: 760px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+.header { background: linear-gradient(135deg, #003C7D, #0066B3); padding: 24px 28px; color: #fff; }
 .header h1 { font-size: 22px; font-weight: 700; }
-.header p { font-size: 13px; color: #D6E4F0; margin-top: 6px; }
-.body { padding: 24px; }
-.section { font-size: 11px; font-weight: 700; color: #00A651; text-transform: uppercase; margin: 18px 0 8px; letter-spacing: 0.5px; }
+.header p { font-size: 13px; color: #D6E4F0; margin-top: 4px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; padding: 24px 28px; }
+.section { font-size: 11px; font-weight: 700; color: #00A651; text-transform: uppercase; margin: 14px 0 6px; letter-spacing: 0.5px; }
 .section:first-child { margin-top: 0; }
 .section.orange { color: #F39200; }
-.item { display: flex; align-items: center; padding: 14px 16px; margin: 5px 0; border-radius: 10px; border: 2px solid #e8ecf0; cursor: pointer; transition: all 0.15s; user-select: none; min-height: 52px; }
+.item { display: flex; align-items: center; padding: 12px 14px; margin: 4px 0; border-radius: 10px; border: 2px solid #e8ecf0; cursor: pointer; transition: all 0.15s; user-select: none; min-height: 50px; }
 .item:hover { border-color: #00A651; background: #f0faf5; }
 .item.checked { border-color: #00A651; background: #f0faf5; }
 .item input { display: none; }
-.item .box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #ccc; margin-right: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.item .box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #ccc; margin-right: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
 .item.checked .box { background: #00A651; border-color: #00A651; }
 .item.checked .box::after { content: '✓'; color: #fff; font-size: 15px; font-weight: 700; }
 .item .label { font-size: 15px; color: #333; font-weight: 500; }
 .item .sub { font-size: 12px; color: #888; margin-top: 2px; }
-.item.indented { margin-left: 28px; }
-.footer { padding: 0 24px 24px; }
-.btn { width: 100%; padding: 18px; font-size: 17px; font-weight: 700; color: #fff; background: #00A651; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
+.footer { padding: 0 28px 24px; }
+.btns { display: flex; gap: 12px; }
+.btn { flex: 1; padding: 16px; font-size: 16px; font-weight: 700; color: #fff; background: #00A651; border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s; }
 .btn:hover { background: #008c44; }
-.instructions { display: none; margin-top: 16px; padding: 16px; background: #f0faf5; border-radius: 10px; border: 1px solid #00A651; }
-.instructions h3 { font-size: 14px; color: #00A651; margin-bottom: 8px; }
-.instructions ol { padding-left: 20px; font-size: 13px; color: #444; line-height: 2; }
+.btn.secondary { background: #003C7D; }
+.btn.secondary:hover { background: #002a5a; }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
+.instructions { display: none; margin-top: 16px; padding: 14px; background: #f0faf5; border-radius: 10px; border: 1px solid #00A651; font-size: 13px; color: #444; line-height: 1.8; }
 .instructions code { background: #e8ecf0; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
 </style>
 </head>
@@ -38,73 +39,68 @@ body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; min-height: 100
 <div class="card">
   <div class="header">
     <h1>⚙️ Configuration du PC</h1>
-    <p>Coche ce dont tu as besoin, puis télécharge ton installeur.</p>
+    <p>Coche ce dont tu as besoin, puis télécharge les 2 fichiers.</p>
   </div>
-  <div class="body">
-    <div class="section">Essentiel</div>
-    <label class="item checked">
-      <input type="checkbox" name="bitlocker" checked>
-      <span class="box"></span>
-      <div><div class="label">Clé BitLocker + Compte Admin</div><div class="sub">Chiffrement disque + compte local administrateur</div></div>
-    </label>
-
-    <div class="section">Voix et lecture</div>
-    <label class="item checked">
-      <input type="checkbox" name="voix" checked>
-      <span class="box"></span>
-      <div><div class="label">Voix naturelles (français)</div><div class="sub">Lecture à voix haute de qualité humaine (NVSA)</div></div>
-    </label>
-    <label class="item indented">
-      <input type="checkbox" name="voix_autres">
-      <span class="box"></span>
-      <div><div class="label">Autres langues</div><div class="sub">Choix des langues à l'installation</div></div>
-    </label>
-    <label class="item checked">
-      <input type="checkbox" name="balabolka" checked>
-      <span class="box"></span>
-      <div><div class="label">Balabolka</div><div class="sub">Lecteur d'écran + export audio MP3</div></div>
-    </label>
-
-    <div class="section">Dictée</div>
-    <label class="item">
-      <input type="checkbox" name="handy">
-      <span class="box"></span>
-      <div><div class="label">Handy (dictée vocale)</div><div class="sub">Écrire en parlant, sans connexion (Whisper)</div></div>
-    </label>
-
-    <div class="section">Navigateur</div>
-    <label class="item checked">
-      <input type="checkbox" name="extensions" checked>
-      <span class="box"></span>
-      <div><div class="label">Extensions lecture</div><div class="sub">BeeLine Reader, Readapt, Natural Reader</div></div>
-    </label>
-
-    <div class="section orange">Options</div>
-    <label class="item">
-      <input type="checkbox" name="pdfx">
-      <span class="box"></span>
-      <div><div class="label">PDF-XChange Editor</div><div class="sub">Lecture et annotation de PDF</div></div>
-    </label>
-    <label class="item">
-      <input type="checkbox" name="onenote">
-      <span class="box"></span>
-      <div><div class="label">OneNote</div><div class="sub">Prise de notes (via Microsoft Store)</div></div>
-    </label>
-    <label class="item">
-      <input type="checkbox" name="polices">
-      <span class="box"></span>
-      <div><div class="label">Polices dyslexie</div><div class="sub">Luciole, OpenDyslexic, Andika…</div></div>
-    </label>
+  <div class="grid">
+    <div>
+      <div class="section">Essentiel</div>
+      <label class="item checked">
+        <input type="checkbox" name="bitlocker" checked>
+        <span class="box"></span>
+        <div><div class="label">Clé BitLocker + Compte Admin</div><div class="sub">Chiffrement + compte local administrateur</div></div>
+      </label>
+      <div class="section">Voix et lecture</div>
+      <label class="item checked">
+        <input type="checkbox" name="voix" checked>
+        <span class="box"></span>
+        <div><div class="label">Voix naturelles (français)</div><div class="sub">Lecture à voix haute (NVSA)</div></div>
+      </label>
+      <label class="item checked">
+        <input type="checkbox" name="balabolka" checked>
+        <span class="box"></span>
+        <div><div class="label">Balabolka</div><div class="sub">Lecteur d'écran + export audio</div></div>
+      </label>
+    </div>
+    <div>
+      <div class="section">Dictée</div>
+      <label class="item">
+        <input type="checkbox" name="handy">
+        <span class="box"></span>
+        <div><div class="label">Handy (dictée vocale)</div><div class="sub">Écrire en parlant, hors-ligne (Whisper)</div></div>
+      </label>
+      <div class="section">Navigateur</div>
+      <label class="item checked">
+        <input type="checkbox" name="extensions" checked>
+        <span class="box"></span>
+        <div><div class="label">Extensions lecture</div><div class="sub">BeeLine, Readapt, Natural Reader</div></div>
+      </label>
+      <div class="section orange">Options</div>
+      <label class="item">
+        <input type="checkbox" name="pdfx">
+        <span class="box"></span>
+        <div><div class="label">PDF-XChange Editor</div><div class="sub">Lecture et annotation PDF</div></div>
+      </label>
+      <label class="item">
+        <input type="checkbox" name="onenote">
+        <span class="box"></span>
+        <div><div class="label">OneNote</div><div class="sub">Prise de notes (Microsoft Store)</div></div>
+      </label>
+      <label class="item">
+        <input type="checkbox" name="polices">
+        <span class="box"></span>
+        <div><div class="label">Polices dyslexie</div><div class="sub">Luciole, OpenDyslexic, Andika…</div></div>
+      </label>
+    </div>
   </div>
   <div class="footer">
-    <button class="btn" onclick="downloadPack()">📥 Télécharger mon installeur</button>
+    <div class="btns">
+      <button class="btn secondary" id="btnCfg" onclick="stepCfg()">📥 1. Ma config</button>
+      <button class="btn" id="btnExe" onclick="stepExe()">📥 2. L'installeur</button>
+    </div>
     <div class="instructions" id="instructions">
-      <h3>✅ Fichiers téléchargés !</h3>
-      <ol>
-        <li>Place <code>config.json</code> dans le même dossier que <code>Install_PC.exe</code></li>
-        <li>Double-clique sur <code>Install_PC.exe</code></li>
-        <li>Attends la fin (connexion internet requise)</li>
-      </ol>
+      <strong>✅ Les 2 fichiers sont téléchargés.</strong><br>
+      1. Place <code>config.json</code> dans le même dossier que <code>Install_PC.exe</code><br>
+      2. Double-clique sur <code>Install_PC.exe</code> et attends la fin (connexion requise)
     </div>
   </div>
 </div>
@@ -113,22 +109,30 @@ document.querySelectorAll('.item').forEach(item => {
   const input = item.querySelector('input');
   input.addEventListener('change', () => item.classList.toggle('checked', input.checked));
 });
-function downloadPack() {
+function stepCfg() {
   const cfg = {};
   document.querySelectorAll('.item input').forEach(input => { cfg[input.name] = input.checked; });
   const blob = new Blob([JSON.stringify(cfg, null, 2)], {type: 'application/json'});
-  const a1 = document.createElement('a');
-  a1.href = URL.createObjectURL(blob);
-  a1.download = 'config.json';
-  a1.click();
-
-  // Telecharge TOUJOURS la derniere version de l'installeur (URL /latest/)
-  setTimeout(() => {
-    const a2 = document.createElement('a');
-    a2.href = 'https://github.com/asvt/CleBitlocker_et_CompteAdmin/releases/latest/download/Install_PC.exe';
-    a2.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'config.json';
+  a.click();
+  document.getElementById('btnCfg').disabled = true;
+  document.getElementById('btnCfg').textContent = '✓ Config téléchargée';
+  checkDone();
+}
+function stepExe() {
+  const a = document.createElement('a');
+  a.href = 'https://github.com/asvt/CleBitlocker_et_CompteAdmin/releases/latest/download/Install_PC.exe';
+  a.click();
+  document.getElementById('btnExe').disabled = true;
+  document.getElementById('btnExe').textContent = '✓ Installeur téléchargé';
+  checkDone();
+}
+function checkDone() {
+  if (document.getElementById('btnCfg').disabled && document.getElementById('btnExe').disabled) {
     document.getElementById('instructions').style.display = 'block';
-  }, 600);
+  }
 }
 </script>
 </body>
