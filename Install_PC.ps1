@@ -1,6 +1,6 @@
 # ============================================================
 # INSTALL PC - Executable unique
-# Version 1.0-beta.2 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
+# Version 1.0-beta.3 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
 #              log AppendAllTex, raccourci fixe, Balabolka portable
 # ============================================================
 
@@ -477,7 +477,7 @@ $Window.Add_ContentRendered({
         Inc-Progress
     }
 
-    # --- Raccourci CompteRegion (cmd et non lnk) ---
+    # --- Raccourci CompteRegion (cmd initialement et non lnk) ---
    Add-Step "Raccourci CompteRegion"
     try {
         Get-ChildItem $Desktop -Filter "Mes fichiers*.lnk" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
@@ -487,9 +487,18 @@ $Window.Add_ContentRendered({
             if ($userFolder -match "\\Admin$") { throw "cible admin refusee" }
             if (-not (Test-Path $userFolder)) { New-Item -ItemType Directory -Path $userFolder -Force | Out-Null }
 
-            $cmdPath = Join-Path $Desktop ("Mes fichiers - $targetUser.cmd")
-            "@echo off`r`nstart `"`" `"$userFolder`"" | Out-File $cmdPath -Encoding ASCII -Force
-            Log-File "Raccourci .cmd ecrit -> $userFolder"
+            $lnkPath = Join-Path $Desktop ("Mes fichiers - $targetUser.lnk")
+            $shell = New-Object -ComObject WScript.Shell
+            $lnk = $shell.CreateShortcut($lnkPath)
+            $lnk.TargetPath = "C:\Windows\explorer.exe"
+            $lnk.Arguments  = "`"$userFolder`""
+            $lnk.WorkingDirectory = "C:\Windows"
+            $lnk.Description = "Dossier personnel $targetUser"
+            $lnk.IconLocation = "shell32.dll,4"
+            $lnk.Save()
+            $lnk = $null
+            [Runtime.InteropServices.Marshal]::ReleaseComObject($shell) | Out-Null
+            Log-File "Raccourci explorer -> $userFolder"
             Done-Step "Raccourci CompteRegion ($targetUser)"
         } else { Skip-Step "Raccourci CompteRegion" }
     } catch { Fail-Step "Raccourci CompteRegion : $($_.Exception.Message)" }
