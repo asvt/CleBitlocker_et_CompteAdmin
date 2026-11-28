@@ -1,7 +1,8 @@
 # ============================================================
 # INSTALL PC - Executable unique
-# Version 1.0-beta.3 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
+# Version 1.0-beta.4 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
 #              log AppendAllTex, raccourci fixe, Balabolka portable
+#			 verification presence et MAJ pour NVSA, presence pour Balabolka et Polices
 # ============================================================
 
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -308,41 +309,71 @@ $Window.Add_ContentRendered({
     }
 
     # --- Voix NVSA (GitHub, francais silencieux) ---
+    # --- Voix NVSA (telecharge seulement si nouvelle version, lance toujours) ---
     if ($cfg.voix) {
         Add-Step "Voix naturelles NVSA"
         if (-not $online) { Fail-Step "Voix NVSA (hors-ligne)" }
         else {
             try {
                 $nvsaDst = "C:\Tools\NVSA"
+                $verFile = Join-Path $nvsaDst "version.txt"
                 $api = "https://api.github.com/repos/gexgd0419/NaturalVoiceSAPIAdapter/releases/latest"
                 $release = Invoke-RestMethod -Uri $api -Headers @{ "User-Agent" = "InstallPC" } -UseBasicParsing
                 $asset = $release.assets | Where-Object { $_.name -like "*x86_x64.zip" } | Select-Object -First 1
                 if (-not $asset) { throw "Asset x86_x64 introuvable" }
-                $zipPath = Join-Path $env:TEMP $asset.name
-                Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing -TimeoutSec 120
-                Unblock-File $zipPath -ErrorAction SilentlyContinue
-                if (Test-Path $nvsaDst) { Remove-Item $nvsaDst -Recurse -Force -ErrorAction SilentlyContinue }
-                New-Item -ItemType Directory -Path $nvsaDst -Force | Out-Null
-                Expand-Archive -Path $zipPath -DestinationPath $nvsaDst -Force
-                $installer = Get-ChildItem -Path $nvsaDst -Filter "Installer.exe" -Recurse | Select-Object -First 1
-                if ($installer) {
+
+                $installedVer = $null
+                if (Test-Path $verFile) { $installedVer = (Get-Content $verFile -Raw).Trim() }
+
+                if ($installedVer -eq $asset.name -and (Test-Path (Join-Path $nvsaDst "Installer.exe"))) {
+                    # Deja a jour : pas de telechargement, on lance juste l'installateur local
+                    Log-File "NVSA deja a jour ($($asset.name)) - relance installateur"
+                    $installer = Get-ChildItem -Path $nvsaDst -Filter "Installer.exe" -Recurse | Select-Object -First 1
                     Unblock-File $installer.FullName -ErrorAction SilentlyContinue
                     Start-Process $installer.FullName -ArgumentList "/S" -WorkingDirectory $installer.DirectoryName -Wait
                     Done-Step "Voix naturelles NVSA"
-                } else { Fail-Step "Voix naturelles NVSA" }
+                } else {
+                    # Nouvelle version ou absente : telechargement + install
+                    Log-File "NVSA a telecharger ($($asset.name))"
+                    $zipPath = Join-Path $env:TEMP $asset.name
+                    Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zipPath -UseBasicParsing -TimeoutSec 120
+                    Unblock-File $zipPath -ErrorAction SilentlyContinue
+                    if (Test-Path $nvsaDst) { Remove-Item $nvsaDst -Recurse -Force -ErrorAction SilentlyContinue }
+                    New-Item -ItemType Directory -Path $nvsaDst -Force | Out-Null
+                    Expand-Archive -Path $zipPath -DestinationPath $nvsaDst -Force
+                    $installer = Get-ChildItem -Path $nvsaDst -Filter "Installer.exe" -Recurse | Select-Object -First 1
+                    if ($installer) {
+                        Unblock-File $installer.FullName -ErrorAction SilentlyContinue
+                        Start-Process $installer.FullName -ArgumentList "/S" -WorkingDirectory $installer.DirectoryName -Wait
+                        $asset.name | Out-File $verFile -Encoding ASCII -Force
+                        Done-Step "Voix naturelles NVSA"
+                    } else { Fail-Step "Voix naturelles NVSA" }
+                }
             } catch { Fail-Step "Voix naturelles NVSA" }
         }
         Inc-Progress
     }
 
-    # --- Balabolka (portable, lien officiel) ---
+    # --- Balabolka (portable, lien officieJ, installation unique sans MAJ automatique) ---
     if ($cfg.balabolka) {
         Add-Step "Balabolka (portable)"
-        if (-not $online) { Fail-Step "Balabolka (hors-ligne)" }
+        $dst  = "C:\Tools\balabolka_portable"
+        $exe  = Get-ChildItem -Path $dst -Filter "balabolka.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($exe) {
+            # Deja installe : on cree juste le raccourci, pas de telechargement
+            Log-File "Balabolka deja installe - raccourci seul"
+            $WScript = New-Object -ComObject WScript.Shell
+            $lnk = $WScript.CreateShortcut((Join-Path $Desktop "Balabolka.lnk"))
+            $lnk.TargetPath = $exe.FullName
+            $lnk.WorkingDirectory = $exe.DirectoryName
+            $lnk.Description = "Balabolka - lecture a voix haute"
+            $lnk.Save()
+            Done-Step "Balabolka (portable)"
+        }
+        elseif (-not $online) { Fail-Step "Balabolka (hors-ligne)" }
         else {
             try {
                 $zipP = Join-Path $env:TEMP "balabolka.zip"
-                $dst  = "C:\Tools\balabolka_portable"
                 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
                 Invoke-WebRequest -Uri $UrlBalabolka -OutFile $zipP -UseBasicParsing -TimeoutSec 90
                 Unblock-File $zipP -ErrorAction SilentlyContinue
@@ -362,19 +393,6 @@ $Window.Add_ContentRendered({
                 } else { Fail-Step "Balabolka (exe introuvable)" }
                 Remove-Item $zipP -Force -ErrorAction SilentlyContinue
             } catch { Fail-Step "Balabolka (portable)" }
-        }
-        Inc-Progress
-    }
-
-    # --- Handy (winget) ---
-    if ($cfg.handy) {
-        Add-Step "Handy (dictee vocale)"
-        if (-not $online) { Fail-Step "Handy (hors-ligne)" }
-        else {
-            try {
-                Start-Process "winget" -ArgumentList "install -e --id cjpais.Handy --accept-package-agreements --accept-source-agreements --silent" -Wait -NoNewWindow
-                Done-Step "Handy (dictee vocale)"
-            } catch { Fail-Step "Handy (dictee vocale)" }
         }
         Inc-Progress
     }
@@ -414,10 +432,20 @@ $Window.Add_ContentRendered({
         Inc-Progress
     }
 
-    # --- Polices (zip, durci) ---
+    # --- Polices (zip, durci, verification OpenDys avant installation) ---
     if ($cfg.polices) {
         Add-Step "Polices dyslexie"
-        if (-not $online) { Fail-Step "Polices (hors-ligne)" }
+        $regName = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+        $already = $false
+        try {
+            $fonts = (Get-ItemProperty -Path $regName -ErrorAction SilentlyContinue).PSObject.Properties.Name
+            if ($fonts | Where-Object { $_ -match "OpenDyslexic" }) { $already = $true }
+        } catch {}
+        if ($already) {
+            Log-File "Polices deja installees - skip"
+            Done-Step "Polices dyslexie"
+        }
+        elseif (-not $online) { Fail-Step "Polices (hors-ligne)" }
         else {
             try {
                 $zipP = Join-Path $env:TEMP "polices.zip"
@@ -434,7 +462,6 @@ $Window.Add_ContentRendered({
                 $fontFiles = Get-ChildItem -Path $extP -Recurse -File | Where-Object { $_.Extension -in ".ttf",".otf",".ttc" }
                 foreach ($f in $fontFiles) {
                     Copy-Item $f.FullName -Destination $fontDir -Force
-                    $regName = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
                     $value = $f.BaseName + " (TrueType)"
                     if ($f.Extension -eq ".otf") { $value = $f.BaseName + " (OpenType)" }
                     New-ItemProperty -Path $regName -Name $value -Value (Join-Path $fontDir $f.Name) -PropertyType String -Force | Out-Null
