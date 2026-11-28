@@ -1,8 +1,8 @@
 # ============================================================
 # INSTALL PC - Executable unique
-# Version 1.0-beta.4 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
+# Version 1.0-beta.6 - CleBitlocker + CompteAdmin integres (PNL OU ordi), 
 #              log AppendAllTex, raccourci fixe, Balabolka portable
-#			 verification presence et MAJ pour NVSA, presence pour Balabolka et Polices
+#			 verification presence et MAJ pour NVSA et Handy, , presence pour Balabolka, Onenote et Polices
 # ============================================================
 
 $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -396,36 +396,98 @@ $Window.Add_ContentRendered({
         }
         Inc-Progress
     }
-
+# --- Handy (winget) ---
+    if ($cfg.handy) {
+        Add-Step "Handy (dictee vocale)"
+        if (-not $online) { Fail-Step "Handy (hors-ligne)" }
+        else {
+            try {
+                Start-Process "winget" -ArgumentList "install -e --id cjpais.Handy --accept-package-agreements --accept-source-agreements --silent" -Wait -NoNewWindow
+                Done-Step "Handy (dictee vocale)"
+            } catch { Fail-Step "Handy (dictee vocale)" }
+        }
+        Inc-Progress
+    } else {
+        Log-File "Handy non demande (case decochee) - skip"
+    }
+	
     # --- PDF-XChange (winget) ---
+ # --- PDF-XChange (winget, verification reelle) ---
     if ($cfg.pdfx) {
         Add-Step "PDF-XChange Editor"
         if (-not $online) { Fail-Step "PDF-XChange (hors-ligne)" }
         else {
             try {
-                Start-Process "winget" -ArgumentList "install -e --id TrackerSoftware.PDF-XChangeEditor --accept-package-agreements --accept-source-agreements --silent" -Wait -NoNewWindow
-                Done-Step "PDF-XChange Editor"
+                $regUn = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+                $regUn64 = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+                $installed = $false
+                foreach ($base in @($regUn, $regUn64)) {
+                    $hit = Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object {
+                        (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).DisplayName -like "*PDF-XChange*"
+                    }
+                    if ($hit) { $installed = $true; break }
+                }
+                if ($installed) {
+                    Log-File "PDF-XChange deja present - skip"
+                    Done-Step "PDF-XChange Editor"
+                } else {
+                    Start-Process "winget" -ArgumentList "install -e --id TrackerSoftware.PDF-XChangeEditor --accept-package-agreements --accept-source-agreements --silent" -Wait -NoNewWindow
+                    # Re-verifie reellement la presence
+                    $ok = $false
+                    foreach ($base in @($regUn, $regUn64)) {
+                        $hit = Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object {
+                            (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).DisplayName -like "*PDF-XChange*"
+                        }
+                        if ($hit) { $ok = $true; break }
+                    }
+                    if ($ok) { Done-Step "PDF-XChange Editor" }
+                    else { Log-File "PDF-XChange : winget n'a rien installe (verifie le log winget)"; Fail-Step "PDF-XChange Editor" }
+                }
             } catch { Fail-Step "PDF-XChange Editor" }
         }
         Inc-Progress
     }
 
-    # --- OneNote (winget msstore) ---
+
+# --- OneNote (winget desktop, PAS msstore, NE JAMAIS mettre a jour si present) ---
     if ($cfg.onenote) {
         Add-Step "OneNote"
         if (-not $online) { Fail-Step "OneNote (hors-ligne)" }
         else {
             try {
-                $already = Get-AppxPackage -Name "Microsoft.Office.OneNote" -ErrorAction SilentlyContinue
-                if ($already) { Done-Step "OneNote" }
-                else {
-                    Start-Process "winget" -ArgumentList "install --id 9WZDNCRFJ3PZ --source msstore --accept-package-agreements --accept-source-agreements --silent --disable-interactivity" -Wait -NoNewWindow
-                    $deadline = (Get-Date).AddMinutes(2); $installed = $false
+                # Detection : AppxPackage (nouveau OneNote) OU registre Uninstall
+                $found = $false
+                if (Get-AppxPackage | Where-Object { $_.Name -match "OneNote" }) { $found = $true }
+                if (-not $found) {
+                    foreach ($base in @("HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                                        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall")) {
+                        if (Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object {
+                            (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).DisplayName -match "OneNote" }) { $found = $true; break }
+                    }
+                }
+                if ($found) {
+                    # PROTECTION DONNEES ELEVE : OneNote deja present -> on n'y touche PAS
+                    Log-File "OneNote deja present - AUCUNE action (protection donnees eleve)"
+                    Done-Step "OneNote (deja present)"
+                } else {
+                    # Installation initiale uniquement (source desktop winget, pas msstore)
+                    $p = Start-Process "winget" -ArgumentList "install -e --id Microsoft.OneNote --source winget --accept-package-agreements --accept-source-agreements --silent" -Wait -NoNewWindow -PassThru
+                    Log-File "OneNote : code retour winget desktop = $($p.ExitCode)"
+                    $deadline = (Get-Date).AddMinutes(3); $installed = $false
                     while ((Get-Date) -lt $deadline -and -not $installed) {
                         Start-Sleep -Seconds 5
-                        if (Get-AppxPackage -Name "Microsoft.Office.OneNote" -ErrorAction SilentlyContinue) { $installed = $true }
+                        if (Get-AppxPackage | Where-Object { $_.Name -match "OneNote" }) { $installed = $true }
+                        if (-not $installed) {
+                            foreach ($base in @("HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                                                "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall")) {
+                                if (Get-ChildItem $base -ErrorAction SilentlyContinue | Where-Object {
+                                    (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).DisplayName -match "OneNote" }) { $installed = $true; break }
+                                }
+                            }
+                        }
                     }
-                    if ($installed) { Done-Step "OneNote" } else { Fail-Step "OneNote (non installe)" }
+                    if ($installed) { Done-Step "OneNote" }
+                    else { Log-File "OneNote non installe (code $($p.ExitCode))"; Fail-Step "OneNote (non installe)" }
                 }
             } catch { Fail-Step "OneNote" }
         }
